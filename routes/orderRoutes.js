@@ -9,28 +9,18 @@ const {
   cancelOrder,
 } = require("../controllers/orderController");
 
-const {
-  verifyToken,
-  requireAdmin,
-} = require("../middleware/authMiddleware");
+const { protectAdmin } = require("../middleware/adminMiddleware");
 
-// Admin-only routes
-router.get("/", verifyToken, requireAdmin, getOrders);
+// Get all orders
+router.get("/", protectAdmin, getOrders);
 
-router.get("/:id", verifyToken, requireAdmin, getOrderById);
+// Get a single order
+router.get("/:id", protectAdmin, getOrderById);
 
-router.patch(
-  "/:id/status",
-  verifyToken,
-  requireAdmin,
-  updateOrderStatus
-);
+// Update order status
+router.patch("/:id/status", protectAdmin, updateOrderStatus);
 
-router.patch(
-  "/:id/cancel",
-  verifyToken,
-  requireAdmin,
-  cancelOrder
-);
+// Cancel order
+router.patch("/:id/cancel", protectAdmin, cancelOrder);
 
 module.exports = router;
