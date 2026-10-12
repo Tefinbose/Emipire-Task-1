@@ -3,8 +3,10 @@ const express = require("express");
 const router = express.Router();
 
 const {
+  createOrder,
   getOrders,
   getOrderById,
+  getMyOrders,
   updateOrderStatus,
   cancelOrder,
 } = require("../controllers/orderController");
@@ -14,7 +16,11 @@ const {
   requireAdmin,
 } = require("../middleware/authMiddleware");
 
-// Admin-only routes
+// User routes
+router.post("/", verifyToken, createOrder);
+router.get("/my-orders", verifyToken, getMyOrders);
+
+// Admin routes
 router.get("/", verifyToken, requireAdmin, getOrders);
 
 router.get("/:id", verifyToken, requireAdmin, getOrderById);

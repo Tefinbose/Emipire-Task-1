@@ -1,18 +1,44 @@
+
 const express = require("express");
+const router = express.Router();
 
-const { protectAdmin } = require("../middleware/adminMiddleware");
-const { createProduct, getProducts, getProductById, updateProduct, deleteProduct } = require("../controllers/productController");
+const {
+  getProducts,
+  getProductById,
+  createProduct,
+  addProductByUser,
+  updateProduct,
+  deleteProduct,
+  getMyProducts,
+} = require("../controllers/productController");
 
-const productRoutes = express.Router();
+const {
+  verifyToken,
+  requireAdmin,
+} = require("../middleware/authMiddleware");
 
-productRoutes.post("/", protectAdmin, createProduct);
+// Public: approved products only
+router.get("/", getProducts);
 
-productRoutes.get("/", protectAdmin, getProducts);
+// User: submit product and view own submissions
+router.post("/user", verifyToken, addProductByUser);
+router.get("/my-products", verifyToken, (req, res, next) => {
+  if (req.user.role !== "user") {
+    return res.status(403).json({
+      success: false,
+      message: "A normal user account is required",
+    });
+  }
 
-productRoutes.get("/:id", protectAdmin, getProductById);
+  next();
+}, getMyProducts);
 
-productRoutes.put("/:id", protectAdmin, updateProduct);
+// Public: one approved product
+router.get("/:id", getProductById);
 
-productRoutes.delete("/:id", protectAdmin, deleteProduct);
+// Admin-only product management
+router.post("/", verifyToken, requireAdmin, createProduct);
+router.put("/:id", verifyToken, requireAdmin, updateProduct);
+router.delete("/:id", verifyToken, requireAdmin, deleteProduct);
 
-module.exports = productRoutes;
+module.exports = router;

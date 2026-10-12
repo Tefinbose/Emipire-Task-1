@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema(
       enum: ["active", "blocked"],
       default: "active",
     },
+     password: {
+      type: String,
+      required: true,
+      select: false,
+    }
   },
   { timestamps: true }
 );
