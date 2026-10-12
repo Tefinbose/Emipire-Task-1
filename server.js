@@ -26,8 +26,6 @@ app.get("/api/health", (req, res) => {
 // Admin authentication routes
 app.use("/api/admin/auth", adminAuthRoutes);
 
-app.use("/api/admin/products", productRoutes);
-
 // Root route
 app.get("/", (req, res) => {
   res.status(200).json({
