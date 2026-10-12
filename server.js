@@ -7,6 +7,9 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const adminAuthRoutes = require("./routes/adminAuthRoutes");
 const productRoutes = require("./routes/productRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +28,10 @@ app.get("/api/health", (req, res) => {
 
 // Admin authentication routes
 app.use("/api/admin/auth", adminAuthRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/users", userRoutes);
 
 // Root route
 app.get("/", (req, res) => {

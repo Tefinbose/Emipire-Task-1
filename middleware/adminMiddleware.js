@@ -9,43 +9,57 @@ const protectAdmin = async (req, res, next) => {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
-        message: "Authentication required",
+        message: "Authorization token is required",
       });
     }
 
     const token = authHeader.split(" ")[1];
 
-    if (!token || !process.env.JWT_SECRET) {
-      return res.status(401).json({
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not configured");
+
+      return res.status(500).json({
         success: false,
-        message: "Invalid authentication",
+        message: "Server authentication configuration error",
       });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (decoded.role !== "admin" || !decoded.id) {
+    if (!decoded.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid admin token",
+      });
+    }
+
+    const admin = await Admin.findById(decoded.id);
+
+    if (!admin || admin.role !== "admin") {
       return res.status(403).json({
         success: false,
         message: "Admin access required",
       });
     }
 
-    const admin = await Admin.findById(decoded.id);
-
-    if (!admin) {
-      return res.status(401).json({
-        success: false,
-        message: "Admin account no longer exists",
-      });
-    }
-
     req.admin = admin;
     next();
   } catch (error) {
-    return res.status(401).json({
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError"
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or expired token",
+      });
+    }
+
+    console.error("Admin authentication error:", error.message);
+
+    return res.status(500).json({
       success: false,
-      message: "Invalid or expired token",
+      message: "Authentication failed",
     });
   }
 };
