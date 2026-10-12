@@ -3,16 +3,22 @@ const express = require("express");
 const router = express.Router();
 
 const {
+  createOrder,
   getOrders,
   getOrderById,
+  getMyOrders,
   updateOrderStatus,
   cancelOrder,
 } = require("../controllers/orderController");
 
 const { protectAdmin } = require("../middleware/adminMiddleware");
 
-// Get all orders
-router.get("/", protectAdmin, getOrders);
+// User routes
+router.post("/", verifyToken, createOrder);
+router.get("/my-orders", verifyToken, getMyOrders);
+
+// Admin routes
+router.get("/", verifyToken, requireAdmin, getOrders);
 
 // Get a single order
 router.get("/:id", protectAdmin, getOrderById);

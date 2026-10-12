@@ -5,11 +5,12 @@ const express = require("express");
 const cors = require("cors");
 
 const connectDB = require("./config/db");
+
 const adminAuthRoutes = require("./routes/adminAuthRoutes");
 const productRoutes = require("./routes/productRoutes");
-const dashboardRoutes = require("./routes/dashboardRoutes");
+const userAuthRoutes = require("./routes/userRoutes");
 const orderRoutes = require("./routes/orderRoutes");
-const userRoutes = require("./routes/userRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,12 +27,20 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Admin authentication routes
+// Admin authentication
 app.use("/api/admin/auth", adminAuthRoutes);
-app.use("/api/dashboard", dashboardRoutes);
+
+// User registration and login
+app.use("/api/user/auth", userAuthRoutes);
+
+// Product routes
 app.use("/api/products", productRoutes);
+
+// Order routes
 app.use("/api/orders", orderRoutes);
-app.use("/api/users", userRoutes);
+
+// Dashboard routes
+app.use("/api/dashboard", dashboardRoutes);
 
 // Root route
 app.get("/", (req, res) => {
@@ -49,9 +58,13 @@ app.use((req, res) => {
   });
 });
 
-// Connect to MongoDB, then start the server
+// Connect to MongoDB and start server
 const startServer = async () => {
   try {
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is missing from .env");
+    }
+
     await connectDB();
 
     app.listen(PORT, () => {
