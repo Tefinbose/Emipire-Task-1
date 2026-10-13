@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 
@@ -6,9 +5,12 @@ const {
   getProducts,
   getProductById,
   createProduct,
-  addProductByUser,
   updateProduct,
   deleteProduct,
+  duplicateProduct,
+  bulkUpdateStatus,
+  bulkDeleteProducts,
+  addProductByUser,
   getMyProducts,
 } = require("../controllers/productController");
 
@@ -17,10 +19,11 @@ const {
   requireAdmin,
 } = require("../middleware/authMiddleware");
 
-// Public: approved products only
+// Public / storefront routes
 router.get("/", getProducts);
+router.get("/handle/:handle", getProductById);
 
-// User: submit product and view own submissions
+// User-submitted product routes (backward compatibility)
 router.post("/user", verifyToken, addProductByUser);
 router.get("/my-products", verifyToken, (req, res, next) => {
   if (req.user.role !== "user") {
@@ -29,16 +32,18 @@ router.get("/my-products", verifyToken, (req, res, next) => {
       message: "A normal user account is required",
     });
   }
-
   next();
 }, getMyProducts);
 
-// Public: one approved product
-router.get("/:id", getProductById);
+// Admin bulk operations
+router.patch("/bulk-status", verifyToken, requireAdmin, bulkUpdateStatus);
+router.delete("/bulk", verifyToken, requireAdmin, bulkDeleteProducts);
 
-// Admin-only product management
+// Single product operations
+router.get("/:id", getProductById);
 router.post("/", verifyToken, requireAdmin, createProduct);
 router.put("/:id", verifyToken, requireAdmin, updateProduct);
 router.delete("/:id", verifyToken, requireAdmin, deleteProduct);
+router.post("/:id/duplicate", verifyToken, requireAdmin, duplicateProduct);
 
 module.exports = router;
