@@ -13,6 +13,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const customerRoutes = require("./routes/customerRoutes");
 const discountRoutes = require("./routes/discountRoutes");
+const marketingRoutes = require("./routes/marketingRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -46,6 +47,9 @@ app.use("/api/customers", customerRoutes);
 
 // Discount & Coupon routes
 app.use("/api/discounts", discountRoutes);
+
+// Marketing & Campaigns routes
+app.use("/api/marketing", marketingRoutes);
 
 // Dashboard routes
 app.use("/api/dashboard", dashboardRoutes);
