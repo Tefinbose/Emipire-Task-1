@@ -1,4 +1,3 @@
-
 const Admin = require("../models/Admin");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -71,4 +70,79 @@ const adminLogin = async (req, res) => {
   }
 };
 
-module.exports = { adminLogin };
+const updateAdminProfile = async (req, res) => {
+  try {
+    const { name, email, currentPassword, newPassword } = req.body;
+    const admin = await Admin.findById(req.admin._id).select("+password");
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: "Admin account not found",
+      });
+    }
+
+    if (name && name.trim()) {
+      admin.name = name.trim();
+    }
+
+    if (email && email.trim()) {
+      const emailLower = email.trim().toLowerCase();
+      const existing = await Admin.findOne({
+        email: emailLower,
+        _id: { $ne: admin._id },
+      });
+
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          message: "Email is already taken by another admin",
+        });
+      }
+
+      admin.email = emailLower;
+    }
+
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Current password is required to set a new password",
+        });
+      }
+
+      const isMatch = await bcrypt.compare(currentPassword, admin.password);
+      if (!isMatch) {
+        return res.status(400).json({
+          success: false,
+          message: "Current password does not match",
+        });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      admin.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    await admin.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin profile updated successfully",
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role,
+      },
+    });
+  } catch (error) {
+    console.error("Update admin profile error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update profile",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { adminLogin, updateAdminProfile };

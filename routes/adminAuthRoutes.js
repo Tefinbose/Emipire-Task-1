@@ -1,9 +1,9 @@
-
 const express = require("express");
 const router = express.Router();
 
 const {
   adminLogin,
+  updateAdminProfile,
 } = require("../controllers/adminAuthController");
 
 const {
@@ -12,6 +12,7 @@ const {
 
 router.post("/login", adminLogin);
 
+// Get currently logged-in administrator profile
 router.get("/profile", protectAdmin, (req, res) => {
   res.status(200).json({
     success: true,
@@ -20,8 +21,12 @@ router.get("/profile", protectAdmin, (req, res) => {
       name: req.admin.name,
       email: req.admin.email,
       role: req.admin.role,
+      createdAt: req.admin.createdAt,
     },
   });
 });
+
+// Update logged-in administrator profile details and password
+router.put("/profile", protectAdmin, updateAdminProfile);
 
 module.exports = router;

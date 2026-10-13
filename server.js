@@ -12,6 +12,7 @@ const userAuthRoutes = require("./routes/userRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const customerRoutes = require("./routes/customerRoutes");
+const discountRoutes = require("./routes/discountRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -42,6 +43,9 @@ app.use("/api/orders", orderRoutes);
 
 // Customer routes
 app.use("/api/customers", customerRoutes);
+
+// Discount & Coupon routes
+app.use("/api/discounts", discountRoutes);
 
 // Dashboard routes
 app.use("/api/dashboard", dashboardRoutes);
