@@ -4,7 +4,17 @@ const Product = require("../models/Product");
 // Get approved products
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find({ status: "approved" })
+    const filter = { status: "approved" };
+
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search, "i");
+      filter.$or = [
+        { name: searchRegex },
+        { category: searchRegex },
+      ];
+    }
+
+    const products = await Product.find(filter)
       .sort({ createdAt: -1 });
 
     res.status(200).json({

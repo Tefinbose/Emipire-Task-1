@@ -290,6 +290,14 @@ exports.cancelOrder = async (req, res) => {
       });
     }
 
+    // Restore stock for each item
+    for (const item of order.items) {
+      await Product.updateOne(
+        { _id: item.product },
+        { $inc: { stock: item.quantity } }
+      );
+    }
+
     order.status = "cancelled";
     await order.save();
 
