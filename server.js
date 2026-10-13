@@ -11,6 +11,7 @@ const productRoutes = require("./routes/productRoutes");
 const userAuthRoutes = require("./routes/userRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const customerRoutes = require("./routes/customerRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -38,6 +39,9 @@ app.use("/api/products", productRoutes);
 
 // Order routes
 app.use("/api/orders", orderRoutes);
+
+// Customer routes
+app.use("/api/customers", customerRoutes);
 
 // Dashboard routes
 app.use("/api/dashboard", dashboardRoutes);

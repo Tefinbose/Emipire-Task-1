@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 
@@ -9,8 +8,13 @@ const {
 
 const {
   getDashboardStats,
+  getAnalyticsData,
 } = require("../controllers/dashboardController");
 
+// Dashboard summary stats
 router.get("/stats", verifyToken, requireAdmin, getDashboardStats);
+
+// Comprehensive store analytics
+router.get("/analytics", verifyToken, requireAdmin, getAnalyticsData);
 
 module.exports = router;
