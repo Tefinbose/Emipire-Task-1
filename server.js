@@ -14,6 +14,10 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const customerRoutes = require("./routes/customerRoutes");
 const discountRoutes = require("./routes/discountRoutes");
 const marketingRoutes = require("./routes/marketingRoutes");
+const storeRoutes = require("./routes/storeRoutes");
+const inventoryRoutes = require("./routes/inventoryRoutes");
+const collectionRoutes = require("./routes/collectionRoutes");
+const giftCardRoutes = require("./routes/giftCardRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -33,11 +37,20 @@ app.get("/api/health", (req, res) => {
 // Admin authentication
 app.use("/api/admin/auth", adminAuthRoutes);
 
+// Multi-store & Merchant routes
+app.use("/api/stores", storeRoutes);
+
 // User registration and login
 app.use("/api/user/auth", userAuthRoutes);
 
 // Product routes
 app.use("/api/products", productRoutes);
+
+// Collections & Categorization routes
+app.use("/api/collections", collectionRoutes);
+
+// Gift cards routes
+app.use("/api/giftcards", giftCardRoutes);
 
 // Order routes
 app.use("/api/orders", orderRoutes);
@@ -53,6 +66,9 @@ app.use("/api/marketing", marketingRoutes);
 
 // Dashboard routes
 app.use("/api/dashboard", dashboardRoutes);
+
+// Inventory routes
+app.use("/api/inventory", inventoryRoutes);
 
 // Root route
 app.get("/", (req, res) => {

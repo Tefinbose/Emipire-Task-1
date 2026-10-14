@@ -25,6 +25,16 @@ const adminSchema = new mongoose.Schema(
       enum: ["admin"],
       default: "admin",
     },
+    stores: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Store",
+      },
+    ],
+    currentStore: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+    },
   },
   { timestamps: true }
 );

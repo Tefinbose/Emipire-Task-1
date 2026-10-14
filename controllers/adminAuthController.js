@@ -58,6 +58,8 @@ const adminLogin = async (req, res) => {
         name: admin.name,
         email: admin.email,
         role: admin.role,
+        currentStore: admin.currentStore,
+        stores: admin.stores,
       },
     });
   } catch (error) {

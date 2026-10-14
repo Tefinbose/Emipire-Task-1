@@ -21,6 +21,8 @@ router.get("/profile", protectAdmin, (req, res) => {
       name: req.admin.name,
       email: req.admin.email,
       role: req.admin.role,
+      currentStore: req.admin.currentStore,
+      stores: req.admin.stores,
       createdAt: req.admin.createdAt,
     },
   });

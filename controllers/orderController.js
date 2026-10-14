@@ -41,17 +41,17 @@ exports.createOrder = async (req, res) => {
         });
       }
 
-      if (foundProduct.status !== "approved") {
+      if (!["active", "approved"].includes(foundProduct.status)) {
         return res.status(400).json({
           success: false,
-          message: `${foundProduct.name} is not available for purchase`,
+          message: `${foundProduct.title || foundProduct.name || "Product"} is not available for purchase`,
         });
       }
 
-      if (foundProduct.stock < quantity) {
+      if (foundProduct.stock < quantity && (foundProduct.quantity || 0) < quantity) {
         return res.status(400).json({
           success: false,
-          message: `Insufficient stock for ${foundProduct.name}`,
+          message: `Insufficient stock for ${foundProduct.title || foundProduct.name || "Product"}`,
         });
       }
 
@@ -69,11 +69,14 @@ exports.createOrder = async (req, res) => {
       const updatedProduct = await Product.findOneAndUpdate(
         {
           _id: item.product,
-          stock: { $gte: item.quantity },
-          status: "approved",
+          $or: [
+            { stock: { $gte: item.quantity } },
+            { quantity: { $gte: item.quantity } },
+          ],
+          status: { $in: ["active", "approved"] },
         },
         {
-          $inc: { stock: -item.quantity },
+          $inc: { stock: -item.quantity, quantity: -item.quantity },
         },
         { new: true }
       );
@@ -87,7 +90,7 @@ exports.createOrder = async (req, res) => {
 
           await Product.updateOne(
             { _id: reducedItem.product },
-            { $inc: { stock: reducedItem.quantity } }
+            { $inc: { stock: reducedItem.quantity, quantity: reducedItem.quantity } }
           );
         }
 
@@ -98,12 +101,20 @@ exports.createOrder = async (req, res) => {
       }
     }
 
+    // Determine store context from items or request header
+    let orderStoreId = req.headers["x-store-id"] || req.storeId || null;
+    if (!orderStoreId && orderItems.length > 0) {
+      const firstProd = await Product.findById(orderItems[0].product);
+      orderStoreId = firstProd?.store || null;
+    }
+
     try {
       const order = await Order.create({
         customer: req.user._id,
         items: orderItems,
         totalAmount,
         status: "pending",
+        store: orderStoreId,
       });
 
       return res.status(201).json({
@@ -116,7 +127,7 @@ exports.createOrder = async (req, res) => {
       for (const item of orderItems) {
         await Product.updateOne(
           { _id: item.product },
-          { $inc: { stock: item.quantity } }
+          { $inc: { stock: item.quantity, quantity: item.quantity } }
         );
       }
 
@@ -138,7 +149,7 @@ exports.getMyOrders = async (req, res) => {
     const orders = await Order.find({
       customer: req.user._id,
     })
-      .populate("items.product", "name price image")
+      .populate("items.product", "title name price image")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -159,9 +170,19 @@ exports.getMyOrders = async (req, res) => {
 // 3. Admin gets all orders
 exports.getOrders = async (req, res) => {
   try {
-    const orders = await Order.find()
+    const storeId = req.headers["x-store-id"] || req.storeId;
+    const filter = {};
+    if (storeId && mongoose.Types.ObjectId.isValid(storeId)) {
+      filter.$or = [
+        { store: storeId },
+        { store: null },
+        { store: { $exists: false } },
+      ];
+    }
+
+    const orders = await Order.find(filter)
       .populate("customer", "name email phone")
-      .populate("items.product", "name price")
+      .populate("items.product", "title name price image")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -290,11 +311,11 @@ exports.cancelOrder = async (req, res) => {
       });
     }
 
-    // Restore stock for each item
+    // Restore stock and quantity for each item
     for (const item of order.items) {
       await Product.updateOne(
         { _id: item.product },
-        { $inc: { stock: item.quantity } }
+        { $inc: { stock: item.quantity, quantity: item.quantity } }
       );
     }
 

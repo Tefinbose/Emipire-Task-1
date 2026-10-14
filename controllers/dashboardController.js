@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const User = require("../models/User");
 const Order = require("../models/Order");
@@ -5,13 +6,34 @@ const Order = require("../models/Order");
 // 1. Dashboard summary stats
 exports.getDashboardStats = async (req, res) => {
   try {
-    const totalProducts = await Product.countDocuments();
+    const storeId = req.headers["x-store-id"] || req.query.storeId || req.storeId;
+    const storeFilter = {};
+    const orderMatch = { status: "delivered" };
+
+    if (storeId && mongoose.Types.ObjectId.isValid(storeId)) {
+      const sId = new mongoose.Types.ObjectId(storeId);
+      storeFilter.$or = [
+        { store: sId },
+        { store: null },
+        { store: { $exists: false } },
+      ];
+      orderMatch.$or = [
+        { store: sId },
+        { store: null },
+        { store: { $exists: false } },
+      ];
+    }
+
+    const totalProducts = await Product.countDocuments(storeFilter);
     const totalUsers = await User.countDocuments({ role: "user" });
-    const totalOrders = await Order.countDocuments();
-    const pendingOrders = await Order.countDocuments({ status: "pending" });
+    const totalOrders = await Order.countDocuments(storeFilter);
+    const pendingOrders = await Order.countDocuments({
+      status: "pending",
+      ...(storeFilter.$or ? { $or: storeFilter.$or } : {}),
+    });
 
     const salesResult = await Order.aggregate([
-      { $match: { status: "delivered" } },
+      { $match: orderMatch },
       {
         $group: {
           _id: null,
@@ -60,12 +82,20 @@ exports.getAnalyticsData = async (req, res) => {
       startDate.setFullYear(now.getFullYear() - 1);
     }
 
+    const storeId = req.headers["x-store-id"] || req.query.storeId || req.storeId;
+    const storeMatch = {};
+    if (storeId && mongoose.Types.ObjectId.isValid(storeId)) {
+      const sId = new mongoose.Types.ObjectId(storeId);
+      storeMatch.$or = [{ store: sId }, { store: null }, { store: { $exists: false } }];
+    }
+
     // A. Daily Sales Time Series for non-cancelled orders
     const timeSeriesAggregation = await Order.aggregate([
       {
         $match: {
           createdAt: { $gte: startDate },
           status: { $ne: "cancelled" },
+          ...storeMatch,
         },
       },
       {
@@ -100,6 +130,7 @@ exports.getAnalyticsData = async (req, res) => {
       {
         $match: {
           createdAt: { $gte: startDate },
+          ...storeMatch,
         },
       },
       {

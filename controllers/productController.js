@@ -22,6 +22,18 @@ const getProducts = async (req, res) => {
 
     const andConditions = [];
 
+    // Filter by store context if provided
+    const storeHeader = req.headers["x-store-id"] || req.query.storeId || req.storeId;
+    if (storeHeader && mongoose.Types.ObjectId.isValid(storeHeader)) {
+      andConditions.push({
+        $or: [
+          { store: storeHeader },
+          { store: null },
+          { store: { $exists: false } },
+        ],
+      });
+    }
+
     // Filter by status if provided (active, draft, unlisted, archived, etc.)
     if (status) {
       if (status === "active") {
@@ -273,6 +285,7 @@ const createProduct = async (req, res) => {
       metafields: Array.isArray(metafields) ? metafields : [],
       seo: seo || { pageTitle: "", metaDescription: "", urlHandle: "" },
       handle: handle || "",
+      store: req.headers["x-store-id"] || req.storeId || req.user?.currentStore || null,
       createdBy: req.user?._id || req.user?.id || null,
       addedBy: null,
     };

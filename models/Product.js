@@ -205,6 +205,11 @@ const metafieldSchema = new mongoose.Schema(
 
 const productSchema = new mongoose.Schema(
   {
+    store: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      index: true,
+    },
     // Basic Information
     title: {
       type: String,

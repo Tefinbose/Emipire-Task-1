@@ -43,6 +43,11 @@ const inventoryAdjustmentHistorySchema = new mongoose.Schema(
 
 const inventorySchema = new mongoose.Schema(
   {
+    store: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      index: true,
+    },
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
